@@ -263,7 +263,7 @@ export function ProjectTree() {
           </h2>
           <div className="lg:pb-2">
             <p className="max-w-[38ch] text-base leading-7 text-ink-muted">
-              Five systems, newest at the canopy and oldest at the roots — one engineering thread through retrieval,
+              Five systems, newest at the top and oldest at the roots one engineering thread through retrieval,
               perception, and inference.
             </p>
             <p className="mt-5 flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.16em] text-brand">
