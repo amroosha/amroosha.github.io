@@ -1,29 +1,182 @@
 import { useCallback, useState } from 'react'
+import type { CSSProperties } from 'react'
 import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from 'framer-motion'
 import { ArrowUpRight } from 'lucide-react'
 import { projects, type Project } from '../data/portfolio'
-import { ProjectDialog } from './ProjectDialog'
+import { ProjectSheet } from './ProjectSheet'
 import { Reveal } from './Reveal'
 
-const positions = [
-  { className: 'lg:left-[2%] lg:top-[40px]', side: 'left' },
-  { className: 'lg:left-[62%] lg:top-[250px]', side: 'right' },
-  { className: 'lg:left-[6%] lg:top-[470px]', side: 'left' },
-  { className: 'lg:left-[60%] lg:top-[690px]', side: 'right' },
-  { className: 'lg:left-[2%] lg:top-[910px]', side: 'left' },
-]
-
-const branchPaths: Record<string, string> = {
-  'seed-bank': 'M600 100C550 100 520 100 456 100',
-  'local-research': 'M600 310C655 310 690 310 744 310',
-  'advanced-rag': 'M600 530C565 530 545 530 504 530',
-  'voice-classification': 'M600 750C655 750 680 750 720 750',
-  'rock-loyalty': 'M600 970C550 970 510 970 456 970',
+/**
+ * Tree geometry lives in a 1000 x 1320 viewBox. Leaf cards use the same
+ * coordinates as percentages, so the SVG and the HTML stay locked together at
+ * every viewport width.
+ */
+interface TreeSlot {
+  /** branch tip, in viewBox units */
+  tip: { x: number; y: number }
+  side: 'left' | 'right'
+  /** where the branch leaves the trunk */
+  attach: { x: number; y: number }
+  sway: { duration: string; delay: string }
 }
 
-const trunkPath = 'M600 0C560 40 640 70 600 100C550 180 650 240 600 310C550 390 650 460 600 530C550 610 650 680 600 750C550 830 650 900 600 970C570 1030 620 1080 600 1120'
+const slots: Record<string, TreeSlot> = {
+  'local-research': {
+    tip: { x: 688, y: 150 },
+    attach: { x: 505, y: 260 },
+    side: 'right',
+    sway: { duration: '13s', delay: '-1s' },
+  },
+  'voice-classification': {
+    tip: { x: 300, y: 370 },
+    attach: { x: 498, y: 480 },
+    side: 'left',
+    sway: { duration: '15s', delay: '-4s' },
+  },
+  'advanced-rag': {
+    tip: { x: 688, y: 590 },
+    attach: { x: 503, y: 700 },
+    side: 'right',
+    sway: { duration: '14s', delay: '-7s' },
+  },
+  'rock-loyalty': {
+    tip: { x: 300, y: 810 },
+    attach: { x: 497, y: 920 },
+    side: 'left',
+    sway: { duration: '16s', delay: '-2s' },
+  },
+  'seed-bank': {
+    tip: { x: 688, y: 1030 },
+    attach: { x: 504, y: 1140 },
+    side: 'right',
+    sway: { duration: '17s', delay: '-9s' },
+  },
+}
 
-interface NodeProps {
+const VIEWBOX = { width: 1000, height: 1200 }
+const TRUNK_X = 500
+
+type Point = { x: number; y: number }
+
+function cubic(a: Point, b: Point, c: Point, d: Point) {
+  return (t: number): Point => {
+    const u = 1 - t
+    return {
+      x: u ** 3 * a.x + 3 * u ** 2 * t * b.x + 3 * u * t ** 2 * c.x + t ** 3 * d.x,
+      y: u ** 3 * a.y + 3 * u ** 2 * t * b.y + 3 * u * t ** 2 * c.y + t ** 3 * d.y,
+    }
+  }
+}
+
+/**
+ * Sweeps a width along a curve and closes it into a tapered outline. The
+ * result reads as wood; a constant-width stroke reads as wire. Width eases
+ * toward the tip so the branch thins the way a real one does.
+ */
+function taper(curve: (t: number) => Point, start: number, end: number, steps = 36, falloff = 1.35) {
+  const left: Point[] = []
+  const right: Point[] = []
+
+  for (let i = 0; i <= steps; i += 1) {
+    const t = i / steps
+    const p = curve(t)
+    const behind = t > 0.004
+    const q = curve(behind ? t - 0.004 : t + 0.004)
+    const dx = behind ? p.x - q.x : q.x - p.x
+    const dy = behind ? p.y - q.y : q.y - p.y
+    const length = Math.hypot(dx, dy) || 1
+    const half = (end + (start - end) * (1 - t) ** falloff) / 2
+    const nx = (-dy / length) * half
+    const ny = (dx / length) * half
+    left.push({ x: p.x + nx, y: p.y + ny })
+    right.push({ x: p.x - nx, y: p.y - ny })
+  }
+
+  const format = (point: Point) => `${point.x.toFixed(1)} ${point.y.toFixed(1)}`
+  return `M${left.map(format).join('L')}L${right.reverse().map(format).join('L')}Z`
+}
+
+/** An offset hairline inside the wood — growth rings, not a second branch. */
+function vein(curve: (t: number) => Point, offset: number, from = 0.04, to = 0.96, steps = 40) {
+  const points: Point[] = []
+  for (let i = 0; i <= steps; i += 1) {
+    const t = from + ((to - from) * i) / steps
+    const p = curve(t)
+    const q = curve(Math.min(1, t + 0.004))
+    const dx = q.x - p.x
+    const dy = q.y - p.y
+    const length = Math.hypot(dx, dy) || 1
+    points.push({ x: p.x + (-dy / length) * offset, y: p.y + (dx / length) * offset })
+  }
+  return `M${points.map((point) => `${point.x.toFixed(1)} ${point.y.toFixed(1)}`).join('L')}`
+}
+
+function branchCurve(slot: TreeSlot) {
+  const dir = slot.side === 'right' ? 1 : -1
+  const { attach, tip } = slot
+  return cubic(
+    { x: TRUNK_X, y: attach.y },
+    { x: TRUNK_X + dir * 18, y: attach.y - 76 },
+    { x: tip.x - dir * 96, y: tip.y + 8 },
+    tip,
+  )
+}
+
+/** Two short shoots per branch, grown off the branch itself. */
+function twigShapes(slot: TreeSlot) {
+  const curve = branchCurve(slot)
+  const dir = slot.side === 'right' ? 1 : -1
+  return [0.34, 0.58].map((t, index) => {
+    const p = curve(t)
+    const lift = 26 + index * 10
+    const twig = cubic(
+      p,
+      { x: p.x + dir * 9, y: p.y - lift * 0.5 },
+      { x: p.x + dir * 22, y: p.y - lift },
+      { x: p.x + dir * 30, y: p.y - lift * 1.55 },
+    )
+    return taper(twig, 3.2, 0.4, 20, 1.1)
+  })
+}
+
+/** Trunk: wide at the roots, narrow at the apex, with a slight lean. */
+const trunkCurve = cubic(
+  { x: TRUNK_X + 1, y: 1200 },
+  { x: TRUNK_X - 5, y: 1010 },
+  { x: TRUNK_X + 6, y: 700 },
+  { x: TRUNK_X + 1, y: 62 },
+)
+const trunkMass = taper(trunkCurve, 34, 3.4, 48, 1.15)
+const trunkLine = vein(trunkCurve, 0.2, 0.02, 0.98, 56)
+
+const barkLines = [vein(trunkCurve, 7, 0.06, 0.9), vein(trunkCurve, -6, 0.1, 0.78)]
+
+const crownTwigs = [
+  cubic({ x: TRUNK_X + 1, y: 84 }, { x: 496, y: 58 }, { x: 480, y: 42 }, { x: 458, y: 24 }),
+  cubic({ x: TRUNK_X + 1, y: 84 }, { x: 508, y: 58 }, { x: 526, y: 44 }, { x: 548, y: 30 }),
+  cubic({ x: TRUNK_X + 1, y: 112 }, { x: 480, y: 98 }, { x: 456, y: 84 }, { x: 432, y: 76 }),
+  cubic({ x: TRUNK_X + 1, y: 112 }, { x: 520, y: 100 }, { x: 546, y: 88 }, { x: 570, y: 82 }),
+].map((twig) => taper(twig, 5, 0.5, 20, 1.1))
+
+/**
+ * The apex terminates in small nodes rather than decorative leaves — the
+ * crown should speak the same language as the project branch tips.
+ */
+const crownNodes = [
+  { x: 458, y: 24 },
+  { x: 548, y: 30 },
+  { x: 432, y: 76 },
+  { x: 570, y: 82 },
+]
+
+const roots = [
+  cubic({ x: 500, y: 1172 }, { x: 470, y: 1194 }, { x: 428, y: 1202 }, { x: 388, y: 1200 }),
+  cubic({ x: 502, y: 1172 }, { x: 534, y: 1194 }, { x: 576, y: 1202 }, { x: 616, y: 1200 }),
+  cubic({ x: 500, y: 1160 }, { x: 482, y: 1184 }, { x: 458, y: 1192 }, { x: 436, y: 1196 }),
+  cubic({ x: 502, y: 1160 }, { x: 522, y: 1184 }, { x: 546, y: 1192 }, { x: 568, y: 1196 }),
+].map((root) => taper(root, 9, 0.5, 24, 1.2))
+
+interface LeafProps {
   project: Project
   index: number
   active: boolean
@@ -32,40 +185,66 @@ interface NodeProps {
   onDeactivate: () => void
 }
 
-function ProjectNode({ project, index, active, onSelect, onActivate, onDeactivate }: NodeProps) {
-  const position = positions[index]
-  const orbPosition = position.side === 'left'
-    ? 'lg:left-auto lg:right-0 lg:translate-x-1/2'
-    : 'lg:left-0 lg:right-auto lg:-translate-x-1/2'
+function Leaf({ project, index, active, onSelect, onActivate, onDeactivate }: LeafProps) {
+  const slot = slots[project.id]
+  const style = {
+    '--x': `${(slot.tip.x / VIEWBOX.width) * 100}%`,
+    '--y': `${(slot.tip.y / VIEWBOX.height) * 100}%`,
+    '--sway-duration': slot.sway.duration,
+    '--sway-delay': slot.sway.delay,
+  } as CSSProperties
 
   return (
-    <motion.button
+    <button
       type="button"
-      layoutId={`project-${project.id}`}
+      data-side={slot.side}
+      data-open={active}
+      className="leaf-node group"
+      style={style}
       onClick={() => onSelect(project)}
       onMouseEnter={() => onActivate(project.id)}
       onMouseLeave={onDeactivate}
       onFocus={() => onActivate(project.id)}
       onBlur={onDeactivate}
-      onPointerDown={() => onActivate(project.id)}
       aria-haspopup="dialog"
-      aria-controls="project-dialog"
-      className={`project-node group relative mb-14 ml-10 block min-h-44 w-[calc(100%_-_2.5rem)] border-t border-lilac/20 pb-4 pt-6 text-left transition-colors hover:border-periwinkle focus-visible:border-periwinkle lg:absolute lg:m-0 lg:w-[36%] ${position.className}`}
+      aria-controls="project-sheet"
+      aria-label={`Open case study: ${project.title}`}
     >
-      <svg className="pointer-events-none absolute -left-10 top-0 h-12 w-10 overflow-visible lg:hidden" viewBox="0 0 40 48" aria-hidden="true">
-        <path d="M6 0C6 14 18 22 40 22" fill="none" stroke={active ? '#7a6cff' : '#4633b9'} strokeOpacity={active ? '1' : '.55'} strokeWidth="1.2" />
-      </svg>
-      <span className={`node-orb ${active ? 'is-active' : ''} absolute -left-[34px] top-2 h-3 w-3 -translate-x-1/2 rounded-full border border-periwinkle/70 bg-midnight lg:top-[52px] ${orbPosition}`} aria-hidden="true" />
-      <span className="flex items-center justify-between gap-4 font-mono text-[9px] uppercase tracking-[0.15em] text-lilac/55 sm:text-[10px]">
-        <span>{project.discipline}</span><span className="shrink-0">{project.year}</span>
+      <motion.span
+        layoutId={`leaf-plate-${project.id}`}
+        className="leaf-plate"
+        aria-hidden="true"
+      />
+      <span className="leaf-vein" aria-hidden="true" />
+
+      <span className="relative block px-6 py-6 sm:px-7 sm:py-7">
+        <span className="flex items-start justify-between gap-4">
+          <span className="flex min-w-0 items-center gap-2 font-mono text-[9px] uppercase tracking-[0.16em] text-ink-faint">
+            <span className="text-brand/70">{String(index + 1).padStart(2, '0')}</span>
+            <span className="h-px w-4 shrink-0 bg-line/40" aria-hidden="true" />
+            <span className="truncate">{project.discipline.split(' · ')[0]}</span>
+          </span>
+          <span className="shrink-0 font-mono text-[9px] uppercase tracking-[0.12em] text-ink-faint">{project.year}</span>
+        </span>
+
+        <span className="leaf-body mt-4">
+          <span className="flex items-start justify-between gap-3">
+            <span className="font-display text-[1.6rem] font-light leading-[1.05] tracking-[-0.025em] text-ink transition-colors duration-500 group-hover:text-brand sm:text-[1.75rem]">
+              {project.shortTitle}
+            </span>
+            <ArrowUpRight
+              size={15}
+              aria-hidden="true"
+              className="mt-2 shrink-0 text-brand/60 transition-transform duration-500 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+            />
+          </span>
+
+          <span className="leaf-summary mt-2.5 block max-w-[32ch] text-[13px] leading-[1.65] text-ink-muted">
+            {project.summary}
+          </span>
+        </span>
       </span>
-      <span className="mt-5 flex items-start justify-between gap-5">
-        <span className="font-display text-[2rem] font-light leading-[1.02] tracking-[-0.025em] text-lilac transition-colors group-hover:text-periwinkle sm:text-4xl">{project.shortTitle}</span>
-        <ArrowUpRight size={20} className="mt-1 shrink-0 text-periwinkle transition-transform group-hover:-translate-y-1 group-hover:translate-x-1" aria-hidden="true" />
-      </span>
-      <span className="mt-4 block max-w-[46ch] text-[14px] leading-6 text-lilac/55">{project.summary}</span>
-      <span className="mt-5 block font-mono text-[9px] uppercase tracking-[0.13em] text-periwinkle/75">Open case study</span>
-    </motion.button>
+    </button>
   )
 }
 
@@ -78,52 +257,105 @@ export function ProjectTree() {
   return (
     <section id="projects" className="section-shell overflow-hidden">
       <Reveal>
-        <div className="grid gap-8 border-b border-lilac/15 pb-10 lg:grid-cols-[1fr_.42fr] lg:items-end">
-          <h2 className="max-w-[900px] font-display text-[clamp(3.2rem,7vw,7.2rem)] font-light leading-[.9] tracking-[-0.045em] text-lilac">Selected work,<br /><em className="text-periwinkle">connected.</em></h2>
+        <div className="grid gap-8 border-b border-line/15 pb-10 lg:grid-cols-[1fr_.42fr] lg:items-end">
+          <h2 className="max-w-[900px] font-display text-[clamp(3.2rem,7vw,7.2rem)] font-light leading-[.9] tracking-[-0.045em] text-ink">
+            Work that grew<br /><em className="font-light text-brand">from one root.</em>
+          </h2>
           <div className="lg:pb-2">
-            <p className="max-w-[38ch] text-base leading-7 text-lilac/55">Five systems, one engineering thread: turning complex models into useful, measurable products.</p>
-            <p className="mt-5 font-mono text-[9px] uppercase tracking-[0.16em] text-periwinkle">Select a node to expand the case study</p>
+            <p className="max-w-[38ch] text-base leading-7 text-ink-muted">
+              Five systems, newest at the canopy and oldest at the roots — one engineering thread through retrieval,
+              perception, and inference.
+            </p>
+            <p className="mt-5 flex items-center gap-2 font-mono text-[9px] uppercase tracking-[0.16em] text-brand">
+              <span className="h-1 w-1 rounded-full bg-brand" aria-hidden="true" />
+              Select a leaf to open the case study
+            </p>
           </div>
         </div>
       </Reveal>
 
       <LayoutGroup>
-        <div className="relative mt-16 lg:mt-10 lg:h-[1120px]">
-          <svg className="pointer-events-none absolute inset-0 hidden h-full w-full lg:block" viewBox="0 0 1200 1120" preserveAspectRatio="none" aria-hidden="true">
+        <div className="tree-stage mt-16 xl:mt-4">
+          <svg
+            className="pointer-events-none absolute inset-0 hidden h-full w-full xl:block"
+            viewBox={`0 0 ${VIEWBOX.width} ${VIEWBOX.height}`}
+            preserveAspectRatio="none"
+            aria-hidden="true"
+          >
             <defs>
-              <linearGradient id="tree-gradient" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="1200" y2="1120">
-                <stop offset="0" stopColor="#4633b9" stopOpacity=".18" />
-                <stop offset=".45" stopColor="#7a6cff" stopOpacity=".75" />
-                <stop offset="1" stopColor="#4633b9" stopOpacity=".18" />
-                {!reduceMotion && <animate attributeName="x1" values="-1200;0" dur="9s" repeatCount="indefinite" />}
-                {!reduceMotion && <animate attributeName="x2" values="0;1200" dur="9s" repeatCount="indefinite" />}
+              <filter id="tree-glow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+              <linearGradient id="trunk-shade" x1="0" y1="1" x2="0" y2="0">
+                <stop offset="0" style={{ stopColor: 'oklch(var(--bark))', stopOpacity: 'var(--trunk-strength)' }} />
+                <stop offset=".55" style={{ stopColor: 'oklch(var(--bark))', stopOpacity: 'calc(var(--trunk-strength) * 0.72)' }} />
+                <stop offset="1" style={{ stopColor: 'oklch(var(--bark))', stopOpacity: 'calc(var(--trunk-strength) * 0.44)' }} />
               </linearGradient>
-              <filter id="tree-glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
             </defs>
-            <path d={trunkPath} fill="none" stroke="#4633b9" strokeOpacity=".28" strokeWidth="2" vectorEffect="non-scaling-stroke" />
-            <path d={trunkPath} fill="none" stroke="url(#tree-gradient)" strokeWidth="1.4" className="beam-current" vectorEffect="non-scaling-stroke" />
+
+            <path className="trunk-mass" d={trunkMass} />
+            {barkLines.map((line) => (
+              <path key={line} className="bark-line" d={line} />
+            ))}
+            <path className="trunk-line" d={trunkLine} />
+            {!reduceMotion && <path className="trunk-sap" d={trunkLine} />}
+            {crownTwigs.map((twig) => (
+              <path key={twig} className="twig-shape" d={twig} />
+            ))}
+
+            <g className="crown">
+              {crownNodes.map((node) => (
+                <circle key={`${node.x}-${node.y}`} className="crown-orb" cx={node.x} cy={node.y} r="2.4" />
+              ))}
+            </g>
+
+            {roots.map((root) => (
+              <path key={root} className="root-shape" d={root} />
+            ))}
+
             {projects.map((project) => {
-              const path = branchPaths[project.id]
+              const slot = slots[project.id]
+              const curve = branchCurve(slot)
+              const path = vein(curve, 0.15, 0, 1, 48)
               const active = activeId === project.id
               return (
-                <g key={project.id}>
-                  <path d={path} fill="none" stroke={active ? '#7a6cff' : '#4633b9'} strokeOpacity={active ? '.95' : '.4'} strokeWidth={active ? '2' : '1.2'} filter={active ? 'url(#tree-glow)' : undefined} className="tree-beam" vectorEffect="non-scaling-stroke" />
-                  <path d={path} fill="none" stroke="url(#tree-gradient)" strokeWidth="1.2" className="beam-current" vectorEffect="non-scaling-stroke" />
+                <g
+                  key={project.id}
+                  className="branch-group"
+                  data-side={slot.side}
+                  style={{ '--sway-duration': slot.sway.duration, '--sway-delay': slot.sway.delay } as CSSProperties}
+                >
+                  <path className="branch-mass" d={taper(curve, 9.5, 1.5, 40, 1.15)} />
+                  <path className="branch-glow" d={path} data-active={active} filter="url(#tree-glow)" />
+                  <path className="branch-path" d={path} data-active={active} />
+                  {twigShapes(slot).map((twig) => (
+                    <path key={twig} className="twig-shape" d={twig} />
+                  ))}
+                  <circle className="node-orb" cx={slot.tip.x} cy={slot.tip.y} r="4.2" data-active={active} />
                 </g>
               )
             })}
           </svg>
-          <svg className="pointer-events-none absolute bottom-0 left-0 top-0 h-full w-3 lg:hidden" viewBox="0 0 12 1000" preserveAspectRatio="none" aria-hidden="true">
-            <path d="M6 0C2 180 10 340 6 500S2 820 6 1000" fill="none" stroke="#4633b9" strokeOpacity=".55" strokeWidth="1.2" vectorEffect="non-scaling-stroke" />
-            <path d="M6 0C2 180 10 340 6 500S2 820 6 1000" fill="none" stroke="#7a6cff" strokeOpacity=".55" strokeWidth="1" className="beam-current" vectorEffect="non-scaling-stroke" />
-          </svg>
 
           {projects.map((project, index) => (
-            <ProjectNode key={project.id} project={project} index={index} active={activeId === project.id} onSelect={setSelected} onActivate={setActiveId} onDeactivate={() => setActiveId(null)} />
+            <Leaf
+              key={project.id}
+              project={project}
+              index={index}
+              active={activeId === project.id}
+              onSelect={setSelected}
+              onActivate={setActiveId}
+              onDeactivate={() => setActiveId(null)}
+            />
           ))}
         </div>
-        <AnimatePresence mode="popLayout">
-          {selected && <ProjectDialog key={selected.id} project={selected} onClose={closeProject} />}
+
+        <AnimatePresence>
+          {selected && <ProjectSheet key={selected.id} project={selected} onClose={closeProject} />}
         </AnimatePresence>
       </LayoutGroup>
     </section>

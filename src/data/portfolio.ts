@@ -1,3 +1,5 @@
+import type { SkillName } from '../components/SkillIcon'
+
 export interface ProjectMetric {
   value: string
   label: string
@@ -23,7 +25,7 @@ export interface Project {
   repoLabel?: string
 }
 
-export const projects: Project[] = [
+const projectList: Project[] = [
   {
     id: 'seed-bank',
     title: 'Seed Bank — Seed Quality Classification',
@@ -137,10 +139,146 @@ export const projects: Project[] = [
   },
 ]
 
-export const skillGroups = [
-  { title: 'Machine Learning & Computer Vision', skills: 'PyTorch · TensorFlow · Scikit-learn · OpenCV · YOLO · ONNX · U2-Net · Faster R-CNN · Wav2Vec2' },
-  { title: 'LLM & MLOps', skills: 'LangChain · LangGraph · LangSmith · ChromaDB · Sentence Transformers · BM25 · Ollama · llama.cpp · MLflow · Docker · AWS' },
-  { title: 'Data Science & Analysis', skills: 'NumPy · Pandas · Matplotlib · Seaborn' },
-  { title: 'Backend & Core Engineering', skills: 'System Design · REST APIs · PostgreSQL · OOP · Data Structures & Algorithms' },
-  { title: 'Programming Languages', skills: 'Python · C++ · SQL · Java · Dart · JavaScript / TypeScript' },
+/**
+ * Display order for the project tree — newest at the canopy, oldest at the
+ * roots. Keep this list explicit rather than relying on array order so the
+ * reading order survives edits to the entries above.
+ */
+const displayOrder = [
+  'local-research',
+  'voice-classification',
+  'advanced-rag',
+  'rock-loyalty',
+  'seed-bank',
+]
+
+export const projects: Project[] = displayOrder.map((id) => {
+  const project = projectList.find((entry) => entry.id === id)
+  if (!project) throw new Error(`Unknown project id in displayOrder: ${id}`)
+  return project
+})
+
+export interface SkillGroup {
+  title: string
+  skills: SkillName[]
+}
+
+/**
+ * Every entry needs a matching icon. `SkillName` is derived from the icon map,
+ * so adding a skill without one is a type error rather than a blank tile.
+ */
+export const skillGroups: SkillGroup[] = [
+  {
+    title: 'Machine Learning & Vision',
+    skills: [
+      'PyTorch',
+      'TensorFlow',
+      'Scikit-learn',
+      'OpenCV',
+      'YOLO',
+      'ONNX',
+      'U2-Net',
+      'Faster R-CNN',
+      'Wav2Vec2',
+    ],
+  },
+  {
+    title: 'LLM & Retrieval',
+    skills: [
+      'LangChain',
+      'LangGraph',
+      'LangSmith',
+      'ChromaDB',
+      'Sentence Transformers',
+      'BM25',
+      'Ollama',
+      'llama.cpp',
+    ],
+  },
+  {
+    title: 'Data & MLOps',
+    skills: ['NumPy', 'Pandas', 'Matplotlib', 'Seaborn', 'MLflow', 'Docker', 'AWS'],
+  },
+  {
+    title: 'Core Engineering',
+    skills: ['System Design', 'REST APIs', 'PostgreSQL', 'OOP', 'Data Structures & Algorithms'],
+  },
+  {
+    title: 'Languages',
+    skills: ['Python', 'TypeScript', 'JavaScript', 'C++', 'Java', 'SQL', 'Dart'],
+  },
+]
+
+/* ---------------------------------------------------------------
+   Experience
+   --------------------------------------------------------------- */
+
+export interface Role {
+  company: string
+  title: string
+  location: string
+  period: string
+  /** The one-line "what this actually was" line. */
+  summary: string
+  points: string[]
+  tags: string[]
+}
+
+export const roles: Role[] = [
+  {
+    company: 'Scale AI',
+    title: 'AI Trainer / LLM Evaluator',
+    location: 'Remote · San Francisco, CA',
+    period: '05/2024 — 01/2026',
+    summary: 'Evaluated and shaped frontier-model behaviour across code, vision, and bilingual reasoning tasks.',
+    points: [
+      'Reviewed and corrected 250+ production LLM responses spanning object-oriented design, frontend architecture, computer vision, and mathematics.',
+      'Partnered with quality managers on edge cases and rubric calibration, raising consistency across Arabic and English evaluation streams.',
+      'Wrote detailed failure analyses that fed back into prompt design and model comparison workflows.',
+    ],
+    tags: ['LLM evaluation', 'Code review', 'Arabic / English', 'Rubric design'],
+  },
+  {
+    company: 'Microsystems Cloud Business Solution',
+    title: 'Software Engineering Intern',
+    location: 'Cairo, Egypt',
+    period: '07/2025 — 10/2025',
+    summary: 'Built modular web applications and then pressure-tested them.',
+    points: [
+      'Developed integration workflows in TypeScript, React, and Angular, working inside Vite and Webpack build pipelines with end-to-end test coverage.',
+      'Ran penetration tests across exposed ports and endpoint vulnerabilities, documenting findings and mitigation paths for the engineering team.',
+    ],
+    tags: ['TypeScript', 'Angular', 'Vite / Webpack', 'AppSec'],
+  },
+]
+
+/* ---------------------------------------------------------------
+   Education, certificates, and contact
+   --------------------------------------------------------------- */
+
+export const certificates = [
+  { name: '2023 ECPC Qualifications Day 5', url: 'https://drive.google.com/file/d/1sQh3Qnfls-UDQ4-tTduW5nxnb7lYN96I/view?usp=sharing' },
+  { name: 'MCBS internship completion', url: 'https://drive.google.com/file/d/1tqDBM9D-Vi0xS-1TJaid2dHfRoG9LwQ2/view' },
+  { name: 'Digitera Certificate', url: 'https://drive.google.com/file/d/1_VQwiii3PS6NAV4tAoASJjypCkaw_TTY/view?usp=sharing' },
+]
+
+export const languages = [
+  { name: 'Arabic', level: 'Native' },
+  { name: 'English', level: 'Proficient' },
+  { name: 'French', level: 'Basic' },
+]
+
+/** Served from public/ — a document-relative href keeps it working at any base path. */
+export const cv = {
+  href: 'Omar-Ez-Eldin-Abdullah-CV.pdf',
+  label: 'Curriculum Vitae',
+  updated: '2026',
+}
+
+export const email = 'omarfayed241@gmail.com'
+
+export const socials = [
+  { label: 'LinkedIn', handle: '/in/omar-ez-eldin-amroosha', href: 'https://linkedin.com/in/omar-ez-eldin-amroosha' },
+  { label: 'GitHub', handle: '/amroosha', href: 'https://github.com/amroosha' },
+  { label: 'Codeforces', handle: '/amroosha', href: 'https://codeforces.com/profile/amroosha' },
 ]

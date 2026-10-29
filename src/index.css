@@ -2,78 +2,238 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ---------------------------------------------------------------
+   Design tokens
+   Every colour is OKLCH. One system, two themes:
+   :root = light, .dark = dark (default, applied by the inline
+   script in index.html before first paint).
+   --------------------------------------------------------------- */
 @layer base {
   :root {
-    --midnight: 0.2209 0.0569 290.15;
-    --violet: 0.2937 0.1072 285.73;
-    --indigo: 0.4356 0.1986 280.70;
-    --periwinkle: 0.6223 0.2105 282.70;
-    --lilac: 0.9348 0.0337 291.24;
-    --color-page: oklch(var(--midnight));
-    --color-surface: oklch(var(--violet));
-    --color-action: oklch(var(--indigo));
-    --color-highlight: oklch(var(--periwinkle));
-    --color-copy: oklch(var(--lilac));
-    --node-surface: var(--color-surface);
-    --beam-stroke: var(--color-highlight);
-    --background: 253 39% 14%;
-    --foreground: 252 100% 95%;
-    --card: 250 50% 25%;
-    --card-foreground: 252 100% 95%;
-    --popover: 250 50% 25%;
-    --popover-foreground: 252 100% 95%;
-    --primary: 246 57% 46%;
-    --primary-foreground: 252 100% 95%;
-    --secondary: 250 50% 25%;
-    --secondary-foreground: 252 100% 95%;
-    --muted: 250 50% 25%;
-    --muted-foreground: 252 45% 76%;
-    --accent: 248 100% 71%;
-    --accent-foreground: 253 39% 14%;
-    --destructive: 0 65% 55%;
-    --destructive-foreground: 252 100% 95%;
-    --border: 252 45% 80%;
-    --input: 252 45% 80%;
-    --ring: 248 100% 71%;
+    color-scheme: light;
+
+    /* surfaces */
+    --page: 0.975 0.007 292;
+    --surface: 0.954 0.011 292;
+    --surface-raised: 0.933 0.016 292;
+
+    /* ink */
+    --ink: 0.285 0.042 288;
+    --ink-muted: 0.500 0.032 288;
+    --ink-faint: 0.545 0.030 288;
+    --line: 0.52 0.045 288;
+
+    /* brand */
+    --brand: 0.545 0.152 286;
+    --brand-deep: 0.455 0.148 284;
+
+    /* atmosphere — deliberately faint */
+    --aura-a: 0.62 0.13 288;
+    --aura-b: 0.64 0.10 302;
+    --aura-c: 0.70 0.09 262;
+    --aura-strength: 0.075;
+
+    /* tree */
+    --bark: 0.46 0.075 284;
+    --bark-soft: 0.55 0.06 286;
+    --trunk-strength: 0.46;
+    --wood: 0.27;
+    --leaf-surface: 0.985 0.008 292;
+    --leaf-edge: 0.52 0.09 286;
+    --leaf-shadow: 0.55 0.06 285;
+    --tile-glow: 0.22;
+
+    /* shadcn primitives */
+    --background: 0.975 0.007 292;
+    --foreground: 0.285 0.042 288;
+    --card: 0.985 0.005 292;
+    --card-foreground: 0.285 0.042 288;
+    --popover: 0.995 0.003 292;
+    --popover-foreground: 0.285 0.042 288;
+    --primary: 0.455 0.148 284;
+    --primary-foreground: 0.985 0.005 292;
+    --secondary: 0.933 0.016 292;
+    --secondary-foreground: 0.285 0.042 288;
+    --muted: 0.933 0.016 292;
+    --muted-foreground: 0.455 0.03 288;
+    --accent: 0.918 0.026 288;
+    --accent-foreground: 0.285 0.042 288;
+    --destructive: 0.55 0.19 26;
+    --destructive-foreground: 0.99 0.005 292;
+    --border: 0.80 0.02 290;
+    --input: 0.80 0.02 290;
+    --ring: 0.545 0.152 286;
     --radius: 0.25rem;
+
+    --sidebar-background: 0.965 0.008 292;
+    --sidebar-foreground: 0.285 0.042 288;
+    --sidebar-primary: 0.455 0.148 284;
+    --sidebar-primary-foreground: 0.985 0.005 292;
+    --sidebar-accent: 0.933 0.016 292;
+    --sidebar-accent-foreground: 0.285 0.042 288;
+    --sidebar-border: 0.80 0.02 290;
+    --sidebar-ring: 0.545 0.152 286;
+  }
+
+  .dark {
+    color-scheme: dark;
+
+    --page: 0.157 0.022 286;
+    --surface: 0.196 0.026 286;
+    --surface-raised: 0.236 0.031 286;
+
+    --ink: 0.925 0.014 289;
+    --ink-muted: 0.660 0.018 289;
+    --ink-faint: 0.615 0.018 289;
+    --line: 0.80 0.025 288;
+
+    --brand: 0.745 0.110 288;
+    --brand-deep: 0.560 0.140 284;
+
+    --aura-a: 0.60 0.14 288;
+    --aura-b: 0.58 0.11 302;
+    --aura-c: 0.66 0.10 262;
+    --aura-strength: 0.10;
+
+    --bark: 0.66 0.075 286;
+    --bark-soft: 0.60 0.06 286;
+    --trunk-strength: 0.46;
+    --wood: 0.26;
+    --leaf-surface: 0.215 0.028 286;
+    --leaf-edge: 0.78 0.05 288;
+    --leaf-shadow: 0.08 0.05 285;
+    --tile-glow: 0.5;
+
+    --background: 0.157 0.022 286;
+    --foreground: 0.925 0.014 289;
+    --card: 0.196 0.026 286;
+    --card-foreground: 0.925 0.014 289;
+    --popover: 0.236 0.031 286;
+    --popover-foreground: 0.925 0.014 289;
+    --primary: 0.745 0.110 288;
+    --primary-foreground: 0.157 0.022 286;
+    --secondary: 0.236 0.031 286;
+    --secondary-foreground: 0.925 0.014 289;
+    --muted: 0.236 0.031 286;
+    --muted-foreground: 0.735 0.02 288;
+    --accent: 0.268 0.036 286;
+    --accent-foreground: 0.925 0.014 289;
+    --destructive: 0.62 0.19 26;
+    --destructive-foreground: 0.97 0.01 290;
+    --border: 0.32 0.03 287;
+    --input: 0.34 0.03 287;
+    --ring: 0.745 0.110 288;
+
+    --sidebar-background: 0.196 0.026 286;
+    --sidebar-foreground: 0.925 0.014 289;
+    --sidebar-primary: 0.745 0.110 288;
+    --sidebar-primary-foreground: 0.157 0.022 286;
+    --sidebar-accent: 0.236 0.031 286;
+    --sidebar-accent-foreground: 0.925 0.014 289;
+    --sidebar-border: 0.32 0.03 287;
+    --sidebar-ring: 0.745 0.110 288;
   }
 
   * { @apply border-border; }
-  html { scroll-behavior: smooth; scroll-padding-top: 5rem; background: var(--color-page); }
+
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 6rem;
+    background: oklch(var(--page));
+    -webkit-text-size-adjust: 100%;
+  }
+
   body {
     margin: 0;
     min-width: 320px;
     min-height: 100dvh;
-    background: var(--color-page);
-    color: var(--color-copy);
+    background: oklch(var(--page));
+    color: oklch(var(--ink));
     font-family: Inter, ui-sans-serif, system-ui, sans-serif;
     font-size: 16px;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+    transition: background-color .5s ease, color .5s ease;
   }
-  button, a { -webkit-tap-highlight-color: transparent; }
-  button { cursor: pointer; }
-  a { text-decoration: none; }
-  ::selection { background: oklch(var(--periwinkle) / .32); color: var(--color-copy); }
-  :focus-visible { outline: 2px solid var(--color-highlight); outline-offset: 5px; }
+
+  ::selection {
+    background: oklch(var(--brand) / .24);
+    color: oklch(var(--ink));
+  }
+
+  :focus-visible {
+    outline: 2px solid oklch(var(--brand));
+    outline-offset: 4px;
+  }
+
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: oklch(var(--line) / .22);
+    border-radius: 999px;
+    border: 3px solid oklch(var(--page));
+  }
+  ::-webkit-scrollbar-thumb:hover { background: oklch(var(--brand) / .45); }
+}
+
+/* ---------------------------------------------------------------
+   Atmosphere
+   Three very faint radial fields, drifting over ~90s. The intent is
+   that you never consciously notice them — the page just stops
+   feeling flat.
+   --------------------------------------------------------------- */
+.page-aura {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(58rem 42rem at 8% -12%, oklch(var(--aura-a) / var(--aura-strength)), transparent 68%),
+    radial-gradient(52rem 46rem at 92% 6%, oklch(var(--aura-b) / calc(var(--aura-strength) * .85)), transparent 70%),
+    radial-gradient(74rem 52rem at 48% 112%, oklch(var(--aura-c) / calc(var(--aura-strength) * .9)), transparent 72%);
+  animation: aura-drift 90s ease-in-out infinite alternate;
+}
+
+.page-aura::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 90% at 50% 0%, transparent 55%, oklch(var(--page) / .55) 100%);
 }
 
 @layer components {
-  .section-shell { @apply mx-auto w-full max-w-[1440px] px-5 py-24 sm:px-8 sm:py-32 lg:px-12 lg:py-40; }
-  .section-kicker { @apply font-mono text-[10px] uppercase tracking-[0.18em] text-periwinkle; }
+  .section-shell {
+    @apply relative mx-auto w-full max-w-[1440px] px-5 py-24 sm:px-8 sm:py-32 lg:px-12 lg:py-40;
+  }
+  .section-kicker {
+    @apply font-mono text-[10px] uppercase tracking-[0.18em] text-brand;
+  }
   .site-header {
-    background: linear-gradient(to bottom, oklch(var(--midnight) / .96), oklch(var(--midnight) / .76) 72%, transparent);
-    backdrop-filter: blur(10px);
+    background: linear-gradient(to bottom, oklch(var(--page) / .96), oklch(var(--page) / .82) 66%, transparent);
+    backdrop-filter: blur(12px);
   }
   .primary-cta {
-    background: var(--color-action);
-    border: 1px solid oklch(var(--periwinkle) / .35);
-    transition: background-color .22s ease, border-color .22s ease, transform .22s ease;
+    background: oklch(var(--brand-deep) / .92);
+    border: 1px solid oklch(var(--brand) / .35);
+    color: oklch(0.97 0.008 290);
+    transition: background-color .25s ease, border-color .25s ease, transform .25s ease, box-shadow .25s ease;
   }
-  .primary-cta:hover { background: oklch(var(--indigo) / .82); border-color: var(--color-highlight); }
-  .primary-cta:active { transform: scale(.98); }
-  .contact-link { border-bottom: 1px solid oklch(var(--periwinkle) / .55); }
+  .primary-cta:hover {
+    background: oklch(var(--brand-deep));
+    border-color: oklch(var(--brand) / .9);
+    box-shadow: 0 18px 40px -26px oklch(var(--brand) / .8);
+  }
+  .primary-cta:active { transform: scale(.985); }
+
+  .ghost-link {
+    border-bottom: 1px solid oklch(var(--brand) / .45);
+    transition: border-color .25s ease, color .25s ease;
+  }
+  .ghost-link:hover { border-color: oklch(var(--brand)); }
+
+  .contact-link { border-bottom: 1px solid oklch(var(--brand) / .55); }
+
   .nav-link { position: relative; }
   .nav-link::after {
     content: '';
@@ -82,67 +242,396 @@
     bottom: 6px;
     left: 0;
     height: 1px;
-    background: var(--color-highlight);
+    background: oklch(var(--brand));
     transform: scaleX(0);
     transform-origin: right;
-    transition: transform .22s ease;
+    transition: transform .28s ease;
   }
-  .nav-link:hover::after, .nav-link:focus-visible::after { transform: scaleX(1); transform-origin: left; }
+  .nav-link:hover::after,
+  .nav-link:focus-visible::after,
+  .nav-link[data-active='true']::after {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+
   .technical-grid {
-    background-image: radial-gradient(oklch(var(--periwinkle) / .16) .7px, transparent .7px);
-    background-size: 28px 28px;
-    mask-image: linear-gradient(to bottom, transparent, black 20%, black 75%, transparent);
+    background-image: radial-gradient(oklch(var(--brand) / .22) .7px, transparent .7px);
+    background-size: 30px 30px;
+    mask-image: linear-gradient(to bottom, transparent, black 18%, black 72%, transparent);
+    opacity: .5;
   }
-  .contact-glow { background: radial-gradient(ellipse at 75% 65%, oklch(var(--indigo) / .18), transparent 55%); }
-  .project-close {
-    top: max(1rem, env(safe-area-inset-top));
-    right: max(1.25rem, env(safe-area-inset-right));
-  }
+
   .skip-link {
     position: fixed;
     top: .75rem;
     left: .75rem;
-    z-index: 60;
+    z-index: 80;
     padding: .75rem 1rem;
-    background: var(--color-copy);
-    color: var(--color-page);
+    background: oklch(var(--ink));
+    color: oklch(var(--page));
     transform: translateY(-180%);
     transition: transform .2s ease;
   }
   .skip-link:focus { transform: translateY(0); }
 }
 
-.hero-orbit { animation: hero-rotate 42s linear infinite; }
-.beam-current {
-  stroke-linecap: round;
-  stroke-dasharray: 3 18;
-  animation: beam-flow 8s linear infinite;
+/* ---------------------------------------------------------------
+   Tree
+   Geometry lives in a 1000 x 1200 viewBox. Leaf cards are positioned
+   with the same percentage coordinates, so the whole organism scales
+   as one piece at every width.
+   --------------------------------------------------------------- */
+.tree-stage { position: relative; }
+
+@media (min-width: 1280px) {
+  .tree-stage { aspect-ratio: 1000 / 1200; }
 }
-.tree-beam { transition: stroke .22s ease, stroke-opacity .22s ease, stroke-width .22s ease; }
-.node-orb {
-  box-shadow: 0 0 0 4px oklch(var(--indigo) / .12), 0 0 16px oklch(var(--periwinkle) / .32);
-  transition: background-color .22s ease, box-shadow .22s ease;
+
+.leaf-node {
+  position: relative;
+  display: block;
+  width: 100%;
+  text-align: left;
 }
-.node-orb::after {
+
+@media (min-width: 1280px) {
+  .leaf-node {
+    position: absolute;
+    width: 27%;
+    top: var(--y);
+    transform-origin: top center;
+    animation: wind-sway var(--sway-duration, 14s) ease-in-out infinite;
+    animation-delay: var(--sway-delay, 0s);
+  }
+  .leaf-node[data-side='right'] { left: var(--x); transform-origin: top left; }
+  .leaf-node[data-side='left'] { right: calc(100% - var(--x)); transform-origin: top right; }
+}
+
+.leaf-plate {
+  position: absolute;
+  inset: 0;
+  border-radius: 1.6rem .4rem 1.6rem .4rem;
+  border: 1px solid oklch(var(--leaf-edge) / .30);
+  background:
+    linear-gradient(158deg, oklch(var(--leaf-surface) / .96), oklch(var(--leaf-surface) / .58));
+  box-shadow: 0 26px 60px -46px oklch(var(--leaf-shadow) / .8);
+  transition: border-color .45s ease, box-shadow .45s ease, background .45s ease;
+}
+
+.leaf-node:hover .leaf-plate,
+.leaf-node:focus-visible .leaf-plate {
+  border-color: oklch(var(--brand) / .65);
+  box-shadow: 0 30px 70px -40px oklch(var(--brand) / .55);
+}
+
+.leaf-node[data-open='true'] .leaf-plate {
+  border-color: oklch(var(--brand) / .8);
+}
+
+/* the midrib — a hairline that reads as a leaf vein */
+.leaf-vein {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: inherit;
+}
+.leaf-vein::before {
   content: '';
   position: absolute;
-  inset: -5px;
-  border: 1px solid var(--color-highlight);
-  border-radius: 999px;
-  opacity: 0;
+  top: -20%;
+  left: 18%;
+  width: 1px;
+  height: 140%;
+  background: linear-gradient(to bottom, transparent, oklch(var(--brand) / .22) 22%, oklch(var(--brand) / .10) 70%, transparent);
+  transform: rotate(24deg);
+  transform-origin: top center;
 }
-.node-orb.is-active { background: var(--color-highlight); box-shadow: 0 0 0 5px oklch(var(--indigo) / .2), 0 0 24px oklch(var(--periwinkle) / .7); }
-.node-orb.is-active::after { animation: node-pulse 1.8s ease-out infinite; }
+.leaf-vein::after {
+  content: '';
+  position: absolute;
+  top: 38%;
+  right: 6%;
+  width: 42%;
+  height: 1px;
+  background: linear-gradient(to left, transparent, oklch(var(--brand) / .16));
+  transform: rotate(-18deg);
+}
 
+.branch-mass {
+  fill: oklch(var(--bark) / var(--wood, .24));
+  transition: fill .45s ease;
+}
+.branch-path {
+  fill: none;
+  stroke: oklch(var(--bark) / .38);
+  stroke-width: .9;
+  vector-effect: non-scaling-stroke;
+  transition: stroke .45s ease, stroke-opacity .45s ease;
+}
+.branch-path[data-active='true'] {
+  stroke: oklch(var(--brand) / .95);
+  stroke-width: 1.6;
+}
+
+.twig-shape { fill: oklch(var(--bark) / calc(var(--wood, .24) * .72)); }
+.root-shape { fill: oklch(var(--bark) / calc(var(--wood, .24) * .82)); }
+
+.crown {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  animation: wind-sway var(--sway-duration, 18s) ease-in-out infinite;
+  animation-delay: -3s;
+}
+.crown-orb {
+  fill: oklch(var(--page));
+  stroke: oklch(var(--brand) / .55);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.branch-glow {
+  fill: none;
+  stroke: oklch(var(--brand) / .32);
+  stroke-width: 3.5;
+  vector-effect: non-scaling-stroke;
+  filter: blur(3px);
+  opacity: 0;
+  transition: opacity .5s ease;
+}
+.branch-glow[data-active='true'] { opacity: 1; }
+
+.sap-flow {
+  fill: none;
+  stroke: oklch(var(--brand) / .85);
+  stroke-width: 1;
+  stroke-linecap: round;
+  stroke-dasharray: 2 22;
+  vector-effect: non-scaling-stroke;
+  animation: sap-flow 14s linear infinite;
+}
+
+.trunk-mass { fill: url(#trunk-shade); }
+.bark-line { fill: none; stroke: oklch(var(--bark) / .16); stroke-width: .8; vector-effect: non-scaling-stroke; }
+.trunk-line { fill: none; stroke: oklch(var(--bark) / .42); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.trunk-sap { fill: none; stroke: oklch(var(--brand) / .55); stroke-width: 1.2; stroke-dasharray: 2 26; vector-effect: non-scaling-stroke; animation: sap-flow 18s linear infinite; }
+
+.node-orb {
+  fill: oklch(var(--page));
+  stroke: oklch(var(--brand) / .65);
+  stroke-width: 1.2;
+  transition: fill .4s ease, stroke .4s ease;
+}
+.node-orb[data-active='true'] { fill: oklch(var(--brand)); stroke: oklch(var(--brand)); }
+
+.branch-group {
+  transform-box: fill-box;
+  transform-origin: left center;
+  animation: wind-sway var(--sway-duration, 12s) ease-in-out infinite;
+  animation-delay: var(--sway-delay, 0s);
+}
+.branch-group[data-side='left'] { transform-origin: right center; }
+
+@keyframes wind-sway {
+  0%, 100% { transform: rotate(-.45deg) translate3d(0, 0, 0); }
+  50% { transform: rotate(.55deg) translate3d(0, -2px, 0); }
+}
+
+@keyframes sap-flow { to { stroke-dashoffset: -240; } }
+@keyframes aura-drift {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(-1.2%, .8%, 0) scale(1.04); }
+  100% { transform: translate3d(1%, -1%, 0) scale(1.02); }
+}
 @keyframes hero-rotate { to { transform: rotate(360deg); } }
-@keyframes beam-flow { to { stroke-dashoffset: -210; } }
-@keyframes node-pulse {
-  0% { opacity: .65; transform: scale(.65); }
-  75%, 100% { opacity: 0; transform: scale(1.5); }
+
+.hero-orbit { animation: hero-rotate 64s linear infinite; transform-origin: center; transform-box: fill-box; }
+
+/* ---------------------------------------------------------------
+   Case-study sheet
+   --------------------------------------------------------------- */
+.sheet-plate {
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(70rem 50rem at 70% 10%, oklch(var(--aura-b) / calc(var(--aura-strength) * 1.4)), transparent 70%),
+    radial-gradient(60rem 40rem at 12% 100%, oklch(var(--aura-a) / calc(var(--aura-strength) * 1.2)), transparent 70%),
+    oklch(var(--page));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  cursor: zoom-out;
+  animation: sheet-unround .6s cubic-bezier(.22, 1, .36, 1) both;
+}
+
+/* The shared-element projection starts at leaf size; a soft radius that
+   sharpens as the shape reaches the viewport sells the "leaf unfolding" read. */
+@keyframes sheet-unround {
+  from { border-radius: 88px; }
+  to { border-radius: 0; }
+}
+
+.sheet-inner { cursor: auto; }
+
+/* Mobile: the tree collapses into a vine. */
+@media (max-width: 1279px) {
+  .tree-stage {
+    display: grid;
+    gap: 1.35rem;
+    padding-left: 1.85rem;
+  }
+  .tree-stage::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: .75rem;
+    bottom: 1.5rem;
+    width: 1px;
+    background: linear-gradient(to bottom, transparent, oklch(var(--bark) / .5) 10%, oklch(var(--bark) / .5) 90%, transparent);
+  }
+  .leaf-node::before {
+    content: '';
+    position: absolute;
+    left: -1.85rem;
+    top: 2.35rem;
+    z-index: 1;
+    height: 7px;
+    width: 7px;
+    transform: translateX(-50%);
+    border-radius: 999px;
+    border: 1px solid oklch(var(--brand) / .8);
+    background: oklch(var(--page));
+  }
+  .leaf-plate { border-radius: 1.25rem .35rem 1.25rem .35rem; }
+}
+
+/* The vine cards are wide, so the summary moves beside the title instead of
+   stretching a single 32ch column across the whole card. */
+@media (min-width: 640px) and (max-width: 1279px) {
+  .leaf-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 2.5rem;
+  }
+  .leaf-summary {
+    margin-top: 0;
+    max-width: 42ch;
+  }
+}
+
+/* ---------------------------------------------------------------
+   Capability wall
+   A lattice of icon tiles. The brand halo sits under every mark at
+   rest and brightens on hover, so the wall shimmers without moving.
+   --------------------------------------------------------------- */
+.skill-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: .5rem;
+  min-height: 5.75rem;
+  padding: .95rem .45rem .7rem;
+  overflow: hidden;
+  text-align: center;
+  border: 1px solid oklch(var(--line) / .16);
+  border-radius: .3rem;
+  background: oklch(var(--surface) / .38);
+  transition: border-color .5s ease, background-color .5s ease;
+}
+
+.skill-tile::before {
+  content: '';
+  position: absolute;
+  top: -1.6rem;
+  left: 50%;
+  width: 4.6rem;
+  height: 4.6rem;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: radial-gradient(closest-side, oklch(var(--brand) / var(--tile-glow)), transparent);
+  opacity: .32;
+  pointer-events: none;
+  transition: opacity .55s ease, transform .55s ease;
+}
+
+/* A single machined corner tick on hover — the only hard-edged flourish. */
+.skill-tile::after {
+  content: '';
+  position: absolute;
+  top: .32rem;
+  right: .32rem;
+  width: .34rem;
+  height: .34rem;
+  border-top: 1px solid oklch(var(--brand) / .75);
+  border-right: 1px solid oklch(var(--brand) / .75);
+  opacity: 0;
+  transition: opacity .4s ease;
+}
+
+.skill-tile:hover {
+  border-color: oklch(var(--brand) / .38);
+  background: oklch(var(--brand) / .05);
+}
+.skill-tile:hover::before { opacity: 1; transform: translateX(-50%) scale(1.12); }
+.skill-tile:hover::after { opacity: 1; }
+
+.skill-tile__icon {
+  position: relative;
+  width: 1.5rem;
+  height: 1.5rem;
+  flex: none;
+  color: oklch(var(--ink-muted));
+  transition: color .45s ease, transform .45s ease;
+}
+.skill-tile:hover .skill-tile__icon {
+  color: oklch(var(--brand));
+  transform: translateY(-1px);
+}
+
+.skill-tile__label {
+  position: relative;
+  max-width: 100%;
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: .5625rem;
+  line-height: 1.3;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  text-wrap: balance;
+  color: oklch(var(--ink-muted));
+  transition: color .45s ease;
+}
+.skill-tile:hover .skill-tile__label { color: oklch(var(--ink)); }
+
+.contact-glow {
+  background: radial-gradient(ellipse at 72% 62%, oklch(var(--aura-a) / calc(var(--aura-strength) * 1.7)), transparent 58%);
+}
+
+.sheet-close {
+  position: fixed;
+  top: max(1rem, env(safe-area-inset-top));
+  right: max(1.25rem, env(safe-area-inset-right));
+  z-index: 60;
 }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .hero-orbit, .beam-current, .node-orb.is-active::after { animation: none; }
-  *, *::before, *::after { transition-duration: .01ms !important; }
+
+  /* Continuous ambience is decoration, not information — stop it outright
+     instead of running it at 0.01ms. */
+  .page-aura,
+  .hero-orbit,
+  .trunk-sap,
+  .branch-group,
+  .leaf-node,
+  .crown {
+    animation: none !important;
+  }
+
+  *, *::before, *::after {
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }

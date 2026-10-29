@@ -8,10 +8,13 @@ import { Contact } from './components/Contact'
 
 export default function App() {
   return (
-    <div className="min-h-[100dvh] bg-midnight text-lilac">
+    <div className="relative min-h-[100dvh]">
+      <div className="page-aura" aria-hidden="true" />
       <a href="#main-content" className="skip-link">Skip to content</a>
       <Header />
-      <main id="main-content">
+      {/* Focus target for the skip link. It is not an interactive control, so it
+          gets no ring; the scroll jump is the visible confirmation. */}
+      <main id="main-content" tabIndex={-1} className="relative z-10 outline-none">
         <Hero />
         <About />
         <ProjectTree />
