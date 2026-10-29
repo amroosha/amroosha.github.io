@@ -1,2 +1,6 @@
 node_modules
 dist
+
+# Playwright MCP run artefacts (screenshots land at repo root)
+.playwright-mcp/
+/*.png
