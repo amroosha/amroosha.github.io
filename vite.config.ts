@@ -12,7 +12,7 @@ export default defineConfig({
     headers: {
       'Access-Control-Allow-Origin': '*',
     },
-    allowedHosts: ['5182-iy5pe0hgux0d2eky6xrt1.e2b.app', 'localhost', '169.254.0.21'],
+    allowedHosts: ['*'],
   },
   resolve: {
     alias: {
