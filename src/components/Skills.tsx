@@ -1,3 +1,4 @@
+import { skillGroups } from '../data/portfolio'
 import { SkillTreeAtomVisuals } from './SkillTreeAtomVisuals'
 import { Reveal } from './Reveal'
 import { SkillIcon } from './SkillIcon'

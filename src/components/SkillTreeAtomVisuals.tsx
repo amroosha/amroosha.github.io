@@ -17,7 +17,8 @@ export function SkillTreeAtomVisuals() {
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (!containerRef.current) return
+    const container = containerRef.current
+    if (!container) return
 
     // 1. Scene Setup
     const scene = new THREE.Scene()
@@ -30,7 +31,7 @@ export function SkillTreeAtomVisuals() {
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
     renderer.setSize(window.innerWidth, window.innerHeight)
     renderer.setPixelRatio(window.devicePixelRatio)
-    containerRef.current.appendChild(renderer.domElement)
+    container.appendChild(renderer.domElement)
 
     // 2. Lighting
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.4)
@@ -144,8 +145,9 @@ export function SkillTreeAtomVisuals() {
 
     window.addEventListener('resize', handleResize)
 
+    let requestID = 0
     const animate = () => {
-      const requestID = requestAnimationFrame(animate)
+      requestID = requestAnimationFrame(animate)
       const time = clock.getElapsedTime()
 
       // Rotate nucleus
@@ -205,7 +207,7 @@ export function SkillTreeAtomVisuals() {
       window.removeEventListener('resize', handleResize)
       cancelAnimationFrame(requestID)
       renderer.dispose()
-      containerRef.current?.removeChild(renderer.domElement)
+      container.removeChild(renderer.domElement)
     }
   }, [])
 
