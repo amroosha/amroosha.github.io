@@ -134,7 +134,7 @@ export function Hero() {
         </motion.p>
 
         <motion.p {...entrance(0.34)} className="mt-6 max-w-[54ch] text-[15px] leading-7 text-ink-muted">
-          CS graduate specializing in Agentic AI and Applied Deep Learning — from local-first LLM
+          CS graduate specializing in Agentic AI and Applied Deep Learning from local-first LLM
           agents and RAG architectures to optimized computer vision and inference systems.
         </motion.p>
 
