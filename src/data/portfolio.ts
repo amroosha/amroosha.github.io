@@ -281,4 +281,5 @@ export const socials = [
   { label: 'LinkedIn', handle: '/in/omar-ez-eldin-amroosha', href: 'https://linkedin.com/in/omar-ez-eldin-amroosha' },
   { label: 'GitHub', handle: '/amroosha', href: 'https://github.com/amroosha' },
   { label: 'Codeforces', handle: '/amroosha', href: 'https://codeforces.com/profile/amroosha' },
+  { label: 'Kaggle', handle: '/amroosha', href: 'https://kaggle.com/amroosha' },
 ]
